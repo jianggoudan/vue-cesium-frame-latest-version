@@ -1,130 +1,62 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br />
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener"
-        >vue-cli documentation</a
-      >.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel"
-          target="_blank"
-          rel="noopener"
-          >babel</a
-        >
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-router"
-          target="_blank"
-          rel="noopener"
-          >router</a
-        >
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-vuex"
-          target="_blank"
-          rel="noopener"
-          >vuex</a
-        >
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint"
-          target="_blank"
-          rel="noopener"
-          >eslint</a
-        >
-      </li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li>
-        <a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a>
-      </li>
-      <li>
-        <a href="https://forum.vuejs.org" target="_blank" rel="noopener"
-          >Forum</a
-        >
-      </li>
-      <li>
-        <a href="https://chat.vuejs.org" target="_blank" rel="noopener"
-          >Community Chat</a
-        >
-      </li>
-      <li>
-        <a href="https://twitter.com/vuejs" target="_blank" rel="noopener"
-          >Twitter</a
-        >
-      </li>
-      <li>
-        <a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a>
-      </li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li>
-        <a href="https://router.vuejs.org" target="_blank" rel="noopener"
-          >vue-router</a
-        >
-      </li>
-      <li>
-        <a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a>
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/vue-devtools#vue-devtools"
-          target="_blank"
-          rel="noopener"
-          >vue-devtools</a
-        >
-      </li>
-      <li>
-        <a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener"
-          >vue-loader</a
-        >
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/awesome-vue"
-          target="_blank"
-          rel="noopener"
-          >awesome-vue</a
-        >
-      </li>
-    </ul>
+  <div id="map">
+
   </div>
 </template>
 
 <script>
-export default {
-  name: "HelloWorld",
-  props: {
-    msg: String,
+  //引入cesium
+  import * as Cesium from 'cesium';
+  import 'cesium/Source/Widgets/widgets.css';
+  export default {
+    name: 'HelloWorld',
+  data(){
+      return{
+        TianMapImage : new Cesium.WebMapTileServiceImageryProvider({
+          url: "http://t0.tianditu.com/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=a3dfb742357fb07dfca6a7ec78d89359",
+          layer: "img",
+          style: "default",
+          format: "image/jpeg",
+          tileMatrixSetID: "EPSG:4326",
+          tilingScheme: new Cesium.GeographicTilingScheme(),
+          tileMatrixLabels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18']
+        })
+      }
   },
-};
+    setup(){
+      //注意要配置
+
+      // window.CESIUM_BASE_URL = '/cesium/';
+      //你申请的token
+      Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiYzcwZmJmNi02MzQ5LTQ1MGEtODgzMy0yZTZiZGExY2MzMGMiLCJpZCI6MTAxOTgsInNjb3BlcyI6WyJhc2wiLCJhc3IiLCJnYyJdLCJpYXQiOjE1ODEzMDgxNTR9.NeJU4yfUi-SnLrNDOBYsQgmiSh3B4axCTi1m84Qw99c';
+    },
+    mounted(){
+      // "cesiumContainer"是需要渲染地图的dom的id.
+      const viewer = new Cesium.Viewer('map', {
+        terrainProvider: Cesium.createWorldTerrain(),
+        imageryProvider: this.TianMapImage,
+        scene3DOnly: true,
+        // baseLayerPicker:true,
+        animation: false,
+        timeline: false,
+        geocoder: false,
+        homeButton: false,
+        navtrueigationHelpButton: false,
+        infoBox: false,
+        selectionIndicator: false,//去除自带绿色选择框
+        baseLayerPicker: false,
+        navigationHelpButton: false
+      });
+
+
+    }
+  }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
+<style scoped>
+  #map{
+    width: 100vw;
+    height: 90vh;
+  }
 </style>
