@@ -4,6 +4,22 @@
 import * as Cesium from 'cesium';
 import 'cesium/Source/Widgets/widgets.css';
 
+var positions1 = [];
+var poly = null;
+var distance = 0;
+var cartesian = null;
+var floatingPoint = [];
+var options;
+var optionsEntity;
+
+
+
+var positions2 = [];
+var polygon = null;
+var tempPoints = [];
+var cartesian2 = null;
+var areaPoint = [];
+var areaMeasure;
 export default {
 
     data() {
@@ -23,7 +39,7 @@ export default {
             this.viewer = new Cesium.Viewer('map', {
                 terrainProvider: Cesium.createWorldTerrain(),
                 scene3DOnly: true,
-                // baseLayerPicker:true,
+                 baseLayerPicker:true,
                 animation: false,
                 timeline: false,
                 geocoder: false,
@@ -31,7 +47,7 @@ export default {
                 navtrueigationHelpButton: false,
                 infoBox: false,
                 selectionIndicator: false,//去除自带绿色选择框
-                baseLayerPicker: false,
+
                 navigationHelpButton: false,
                 fullscreenButton: false,
             });
@@ -45,37 +61,74 @@ export default {
         zoomOut() {
             this.viewer?.camera.moveForward(1000000)
         },
-        distance() {
-            this.isMeasureingDistance=!this.isMeasureingDistance
-            if(this.isMeasureingDistance){
-                this.measureLineSpace(this.viewer)
+
+        clearDistance() {
+
+            for (const i of floatingPoint) {
+                this.viewer.entities.remove(i)
             }
-            else{
-                this.viewer.entities.removeAll()
+            this.viewer.entities.remove(optionsEntity)
+
+        },
+        clearArea() {
+            for (const i of areaPoint) {
+                this.viewer.entities.remove(i)
+            }
+            // this.viewer.entities.remove(polygon)
+            this.viewer.entities.remove(areaMeasure)
+
+        },
+        distance() {
+
+            this.isMeasureingDistance = !this.isMeasureingDistance
+            if (this.isMeasureingDistance) {
+
+                this.measureLineSpace(this.viewer)
+            } else {//再次点击按钮清除线
+                this.clearDistance()
+                this.resetDistance()
             }
 
         },
         area() {
-            this.isMeasureingArea=!this.isMeasureingArea
-            if(this.isMeasureingArea){
+
+            this.isMeasureingArea = !this.isMeasureingArea
+            if (this.isMeasureingArea) {
+
                 this.measurePolygn(this.viewer)
-            }else{
-                this.viewer.entities.removeAll()
+            } else {
+                this.clearArea()
+                this.resetArea()
+
             }
 
+        },
+        // 重置测距参数
+        resetDistance(){
+             positions1 = [];
+             poly = null;
+             distance = 0;
+             cartesian = null;
+             floatingPoint = [];
+             options=null;
+             optionsEntity=null;
+        },
+        // 重置测面参数
+        resetArea(){
+             positions2 = [];
+             polygon = null;
+             tempPoints = [];
+             cartesian2 = null;
+             areaPoint = [];
+             areaMeasure=null;
         },
         //测距
         measureLineSpace(viewer) {
             // 取消双击事件-追踪该位置
             viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
-         let   handler = new Cesium.ScreenSpaceEventHandler(viewer.scene._imageryLayerCollection);
-            var positions = [];
-            var poly = null;
-            // var tooltip = document.getElementById("toolTip");
-            var distance = 0;
-            var cartesian = null;
-            var floatingPoint;
+            let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene._imageryLayerCollection);
+
             // tooltip.style.display = "block";
 
             handler.setInputAction(function (movement) {
@@ -86,15 +139,15 @@ export default {
                 let ray = viewer.camera.getPickRay(movement.endPosition);
                 cartesian = viewer.scene.globe.pick(ray, viewer.scene);
                 //cartesian = viewer.scene.camera.pickEllipsoid(movement.endPosition, viewer.scene.globe.ellipsoid);
-                if (positions.length >= 2) {
+                if (positions1.length >= 2) {
                     if (!Cesium.defined(poly)) {
-                        poly = new PolyLinePrimitive(positions);
+                        poly = new PolyLinePrimitive(positions1);
                     } else {
-                        positions.pop();
+                        positions1.pop();
                         // cartesian.y += (1 + Math.random());
-                        positions.push(cartesian);
+                        positions1.push(cartesian);
                     }
-                    distance = getSpaceDistance(positions);
+                    distance = getSpaceDistance(positions1);
                     // console.log("distance: " + distance);
                     // tooltip.innerHTML='<p>'+distance+'米</p>';
                 }
@@ -106,18 +159,19 @@ export default {
                 // cartesian = viewer.scene.pickPosition(movement.position);
                 let ray = viewer.camera.getPickRay(movement.position);
                 cartesian = viewer.scene.globe.pick(ray, viewer.scene);
-                if (positions.length == 0) {
-                    positions.push(cartesian.clone());
+                if (positions1.length == 0) {
+                    positions1.push(cartesian.clone());
                 }
-                positions.push(cartesian);
+                positions1.push(cartesian);
                 //在三维场景中添加Label
                 //   var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                 var textDisance = distance + "米";
                 // console.log(textDisance + ",lng:" + cartographic.longitude/Math.PI*180.0);
-                floatingPoint = viewer.entities.add({
+                // floatingPoint = viewer.entities.add({
+                floatingPoint.push(viewer.entities.add({
                     name: '空间直线距离',
                     // position: Cesium.Cartesian3.fromDegrees(cartographic.longitude / Math.PI * 180, cartographic.latitude / Math.PI * 180,cartographic.height),
-                    position: positions[positions.length - 1],
+                    position: positions1[positions1.length - 1],
                     point: {
                         pixelSize: 5,
                         color: Cesium.Color.RED,
@@ -133,21 +187,21 @@ export default {
                         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                         pixelOffset: new Cesium.Cartesian2(20, -20),
                     }
-                });
+                }));
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
             handler.setInputAction(function (movement) {
                 handler.destroy(); //关闭事件句柄
-                positions.pop(); //最后一个点无效
-                 // viewer.entities.remove(floatingPoint);
-                 // tooltip.style.display = "none";
+                positions1.pop(); //最后一个点无效
+
 
             }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
             var PolyLinePrimitive = (function () {
-                function _(positions) {
-                    this.options = {
+                function _(positions1) {
+                    options = {
                         name: '直线',
+                        id: 'zhixian',
                         polyline: {
                             show: true,
                             positions: [],
@@ -156,7 +210,7 @@ export default {
                             clampToGround: true
                         }
                     };
-                    this.positions = positions;
+                    this.positions = positions1;
                     this._init();
                 }
 
@@ -166,20 +220,20 @@ export default {
                         return _self.positions;
                     };
                     //实时更新polyline.positions
-                    this.options.polyline.positions = new Cesium.CallbackProperty(_update, false);
-                    viewer.entities.add(this.options);
+                    options.polyline.positions = new Cesium.CallbackProperty(_update, false);
+                    optionsEntity = viewer.entities.add(options);
                 };
 
                 return _;
             })();
 
             //空间两点距离计算函数
-            function getSpaceDistance(positions) {
+            function getSpaceDistance(positions1) {
                 var distance = 0;
-                for (var i = 0; i < positions.length - 1; i++) {
+                for (var i = 0; i < positions1.length - 1; i++) {
 
-                    var point1cartographic = Cesium.Cartographic.fromCartesian(positions[i]);
-                    var point2cartographic = Cesium.Cartographic.fromCartesian(positions[i + 1]);
+                    var point1cartographic = Cesium.Cartographic.fromCartesian(positions1[i]);
+                    var point2cartographic = Cesium.Cartographic.fromCartesian(positions1[i + 1]);
                     /**根据经纬度计算出距离**/
                     var geodesic = new Cesium.EllipsoidGeodesic();
                     geodesic.setEndPoints(point1cartographic, point2cartographic);
@@ -196,20 +250,16 @@ export default {
         measurePolygn(viewer) {
             // 鼠标事件
             var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene._imageryLayerCollection);
-            var positions = [];
-            var tempPoints = [];
-            var polygon = null;
-            var cartesian = null;
-            var floatingPoint;//浮动点
+
             handler.setInputAction(function (movement) {
                 let ray = viewer.camera.getPickRay(movement.endPosition);
-                cartesian = viewer.scene.globe.pick(ray, viewer.scene);
-                positions.pop();//移除最后一个
-                positions.push(cartesian);
-                if (positions.length >= 2) {
+                cartesian2 = viewer.scene.globe.pick(ray, viewer.scene);
+                positions2.pop();//移除最后一个
+                positions2.push(cartesian2);
+                if (positions2.length >= 2) {
                     var dynamicPositions = new Cesium.CallbackProperty(function () {
-                        return new Cesium.PolygonHierarchy(positions);
-                        return positions;
+                        return new Cesium.PolygonHierarchy(positions2);
+                        return positions2;
                     }, false);
                     polygon = PolygonPrimitive(dynamicPositions);
                 }
@@ -217,21 +267,21 @@ export default {
 
             handler.setInputAction(function (movement) {
                 let ray = viewer.camera.getPickRay(movement.position);
-                cartesian = viewer.scene.globe.pick(ray, viewer.scene);
-                if (positions.length == 0) {
-                    positions.push(cartesian.clone());
+                cartesian2 = viewer.scene.globe.pick(ray, viewer.scene);
+                if (positions2.length == 0) {
+                    positions2.push(cartesian2.clone());
                 }
-                positions.push(cartesian);
+                positions2.push(cartesian2);
                 //在三维场景中添加点
-                var cartographic = Cesium.Cartographic.fromCartesian(positions[positions.length - 1]);
+                var cartographic = Cesium.Cartographic.fromCartesian(positions2[positions2.length - 1]);
                 var longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
                 var latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
                 var heightString = cartographic.height;
                 var labelText = "(" + longitudeString.toFixed(2) + "," + latitudeString.toFixed(2) + ")";
                 tempPoints.push({lon: longitudeString, lat: latitudeString, hei: heightString});
-                floatingPoint = viewer.entities.add({
+                areaPoint.push(viewer.entities.add({
                     name: '多边形面积',
-                    position: positions[positions.length - 1],
+                    position: positions2[positions2.length - 1],
                     point: {
                         pixelSize: 5,
                         color: Cesium.Color.RED,
@@ -248,15 +298,15 @@ export default {
                     //     verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                     //     pixelOffset: new Cesium.Cartesian2(20, -20),
                     // }
-                });
+                }));
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
             handler.setInputAction(function (movement) {
                 handler.destroy();
-                positions.pop();
+                positions2.pop();
                 var textArea = getArea(tempPoints) + "平方公里";
-                viewer.entities.add({
+                areaMeasure = viewer.entities.add({
                     name: '多边形面积',
-                    position: positions[positions.length - 1],
+                    position: positions2[positions2.length - 1],
                     label: {
                         text: textArea,
                         font: '18px sans-serif',
@@ -279,11 +329,11 @@ export default {
                     var j = (i + 1) % points.length;
                     var k = (i + 2) % points.length;
                     var totalAngle = Angle(points[i], points[j], points[k]);
-                    var dis_temp1 = distance(positions[i], positions[j]);
-                    var dis_temp2 = distance(positions[j], positions[k]);
+                    var dis_temp1 = distance(positions2[i], positions2[j]);
+                    var dis_temp2 = distance(positions2[j], positions2[k]);
                     res += dis_temp1 * dis_temp2 * Math.abs(Math.sin(totalAngle));
                 }
-                return (res / 1000000.0).toFixed(4);
+                return (res / 1000000.0).toFixed(4)/2;
             }
 
             /*角度*/
@@ -311,10 +361,10 @@ export default {
                 return angle;
             }
 
-            function PolygonPrimitive(positions) {
+            function PolygonPrimitive(positions2) {
                 polygon = viewer.entities.add({
                     polygon: {
-                        hierarchy: positions,
+                        hierarchy: positions2,
                         material: Cesium.Color.GREEN.withAlpha(0.1),
                     }
                 });
