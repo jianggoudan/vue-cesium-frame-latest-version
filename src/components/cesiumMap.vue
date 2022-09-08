@@ -1,23 +1,36 @@
 <template>
     <div id="map"/>
-
+    <zoom-in-and-out @zoomIn="zoomIn"
+                     @zoomOut="zoomOut"
+                     @distance="distance"
+                     @area="area"
+    />
 
 </template>
 
 <script>
+    import * as Cesium from 'cesium';
     import mixins from "@/mixins";
+    import zoomInAndOut from "@/components/tools/zoomInAndOut";
     export default {
         name: 'HelloWorld',
+        components:{
+            zoomInAndOut,
+        },
         mixins: [
             mixins,
         ],
         data() {
-            return {}
+            return {
+
+            }
         },
-        methods: {},
-        mounted() {
-            this.mapInit()
-        }
+        methods: {
+
+
+
+        },
+
     }
 </script>
 <style scoped>

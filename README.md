@@ -19,6 +19,8 @@ npm run build
 ```
 npm run lint
 ```
-
+###已加入antd和element plus
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+
