@@ -4,6 +4,7 @@
         <el-button type="primary" @click="zoomIn">缩小</el-button>
         <el-button type="primary" @click="distance">测距</el-button>
         <el-button type="primary" @click="area">测面</el-button>
+        <el-button type="primary" @click="changeLayer">切换地图</el-button>
     </div>
 </template>
 
@@ -28,6 +29,9 @@
             },
             zoomOut(){
                this.$emit('zoomOut')
+            },
+            changeLayer(){
+                this.$emit('changeLayer')
             },
         },
     }

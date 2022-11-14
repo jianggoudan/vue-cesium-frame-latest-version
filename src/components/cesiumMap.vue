@@ -4,6 +4,7 @@
                      @zoomOut="zoomOut"
                      @distance="distance"
                      @area="area"
+                     @changeLayer="changeLayer"
     />
 
 </template>

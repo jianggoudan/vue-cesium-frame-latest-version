@@ -27,6 +27,11 @@ export default {
             viewer: null,
             isMeasureingDistance: false,
             isMeasureingArea: false,
+            tian_v: 'http://t0.tianditu.com/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=vec&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=c2561b793d27c0b743a032c0362e1a02',
+            tian_m: 'http://t0.tianditu.com/cva_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cva&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=c2561b793d27c0b743a032c0362e1a02',
+            showTian: false,
+            tian1: null,
+            tian2: null,
         }
     },
     mounted() {
@@ -39,7 +44,7 @@ export default {
             this.viewer = new Cesium.Viewer('map', {
                 terrainProvider: Cesium.createWorldTerrain(),
                 scene3DOnly: true,
-                 baseLayerPicker:true,
+                 baseLayerPicker:false,
                 animation: false,
                 timeline: false,
                 geocoder: false,
@@ -52,6 +57,32 @@ export default {
                 fullscreenButton: false,
             });
             this.viewer.cesiumWidget.creditContainer.style.display = "none";//去掉logo
+            this.viewer.scene.globe.depthTestAgainstTerrain = false;
+        },
+        //地图切换-添加删除地区名称/行政区划图层
+        changeLayer() {
+            this.showTian = !this.showTian
+            if (this.showTian) {
+                this.tian1 = this.viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
+                    url: this.tian_v,
+                    layer: "tdtVecBasicLayer",
+                    style: "default",
+                    format: "image/jpeg",
+                    tileMatrixSetID: "GoogleMapsCompatible",
+                    show: false
+                }));
+                this.tian2 = this.viewer.imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
+                    url: this.tian_m,
+                    layer: "tdtAnnoLayer",
+                    style: "default",
+                    format: "image/jpeg",
+                    tileMatrixSetID: "GoogleMapsCompatible"
+                }));
+            } else {
+                this.viewer.imageryLayers.remove(this.tian1)
+                this.viewer.imageryLayers.remove(this.tian2)
+
+            }
         },
         //缩小按钮
         zoomIn() {
