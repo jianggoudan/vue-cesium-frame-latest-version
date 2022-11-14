@@ -45,4 +45,12 @@ module.exports = defineConfig({
             })
         ]
     },
+
+    css: {
+        loaderOptions: {
+            postcss: {}
+        }
+    }
+
+
 })
